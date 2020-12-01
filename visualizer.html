@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Scrutin visualizer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        a {
+            text-decoration: none;
+            color:#155b87;
+        }
+        a:hover {
+            color:black;
+        }
+        body {
+            background-color: #eee;;
+        }
+        #group-select {
+            margin: 4px;
+        }
+        #tab {
+            width:1800px;
+            font-size:0;
+        }
+        .row-header {
+            width:100%;
+            height:24px;
+        }
+        .row-header .column {
+            border-top: 1px solid black;
+        }
+        .row-scrutin {
+            position:relative;
+            height:68px;
+        }
+        .column-title {
+            width:300px;
+            padding:4px;    
+        }
+        .column {
+            display: inline-block;
+            border-left: 1px solid black;
+            border-bottom: 1px solid black;
+            font-size:12px;
+            height:100%;
+        }
+        .column:last-of-type {
+            border-right: 1px solid black;
+        }
+        .column-element {
+            vertical-align: top;
+            width:20px;
+            font-size:8px;
+            line-height:20px;
+            text-align:center;
+        }
+        .row-header > .column-element:hover{
+            background-color:#ccc;
+        }
+    </style>
+</head>
+<body>
+    <label for="group-select">Choisir un parti:</label>
+    <select name="group" id="group-select" onchange="updateTable(this)">
+        <option value="">--Please choose an option--</option>
+        <option value="LREM">La République en Marche</option>
+        <option value="LR">Les Républicains</option>
+        <option value="MoDem">Mouvement Démocrate (MoDem) et Démocrates apparentés</option>
+        <option value="PS">Socialistes et apparentés</option>
+        <option value="AE">Agir ensemble</option>
+        <option value="UDI">UDI et Indépendants</option>
+        <option value="LT">Libertés et Territoires</option>
+        <option value="LFI">La France insoumise</option>
+        <option value="GDR">Gauche démocrate et républicaine</option>
+        <option value="N/I">Non inscrit</option>
+    </select>
+
+    <div id="tab">
+        <!--
+            <div class="row-header">
+                <div class="column column-title">Scrutin/Voters</div>
+                <div class="column column-element">Toto</div>
+                <div class="column column-element">Lala</div>
+            </div>
+        -->
+        <!--
+            <div class="row-scrutin">
+                <div class="column column-title">1212</div>
+                <div class="column column-element">1</div>
+                <div class="column column-element">-1</div>
+            </div>
+        -->
+    </div>
+    
+    <script src="voters.js"></script>
+    <script>
+        var tab = document.getElementById('tab');
+
+        var scrutins = {
+            1814: {
+                titre: "l'ensemble du projet de loi relatif à l'organisation et à la transformation du système de santé (première lecture).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/organisation_transformation_systeme_sante?etape=15-AN1-DEPOT",
+            },
+            1923: {
+                titre: "l'ensemble du projet de loi de transformation de la fonction publique (première lecture).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/transformation_fonction_publique?etape=15-AN1-DEPOT",
+            },
+            2059: {
+                titre: "l'ensemble du projet de loi autorisant la ratification de l'accord économique et commercial global entre l'Union européenne et ses États membres, d'une part, et le Canada... (première lecture).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/aecg_partenariat_strategique_ue-canada?etape=15-AN1-DEPOT",
+            },
+            2071: {
+                titre: "l'ensemble du projet de loi d'orientation des mobilités (nouvelle lecture). ",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/loi_orientation_mobilites?etape=15-SN1-DEPOT",
+            },
+            2742: {
+                titre: "l'ensemble de la proposition de loi visant à lutter contre les contenus haineux sur internet (lecture définitive).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/lutte_contre_haine_internet?etape=15-AN1-DEPOT",
+            },
+            2749: {
+                titre: "l'ensemble de la proposition de loi permettant le don de congés payés sous forme de chèques-vacances aux membres du secteur médico-social en reconnaissance de leur action durant l'épidémie de covid-19 (première lecture).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/don_conges_cheques-vacances_secteur_medico-social_covid-19?etape=15-AN1-DEPOT",
+            },
+            2762: {
+                titre: "l'article unique de la proposition de résolution visant à rendre l'accès aux masques gratuit (article 34-1 de la Constitution).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/acces_masques_gratuits?etape=15-ANLUNI-DEPOT",
+            },
+            2940: {
+                titre: "l'ensemble du projet de loi relatif aux conditions de mise sur le marché de certains produits phytopharmaceutiques en cas de danger sanitaire pour les betteraves sucrières (première lecture).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/mise_sur_le_marche_de_certains_produits_phytopharmaceutiques_en_cas_de_danger_sanitaire?etape=15-AN1-DEPOT",
+            },
+            3186: {
+                titre: "l'ensemble du projet de loi de finances pour 2021 (première lecture).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/loi_de_finances_pour_2021?etape=15-AN1-DEPOT",
+            },
+            3254: {
+                titre: "l'ensemble de la proposition de loi relative à la sécurité globale (première lecture).",
+                url: "http://www.assemblee-nationale.fr/dyn/15/dossiers/securite_globale1?etape=15-AN1-DEPOT",
+            },
+        }
+
+        drawTable(voters, 'LR');
+
+        function drawTable(votersList, groupAbreviation) {
+            tab.innerHTML = '';
+            var filteredVoters = {};
+
+            var i = 0;
+            for (const [key, voter] of Object.entries(votersList)) {
+                if (i > 60) {
+                    break;
+                }
+                if (voter['groupAbreviation'] != groupAbreviation) {
+                    continue;
+                }
+                filteredVoters[key] = voter;
+
+                i++;
+            }
+
+            addHeader(filteredVoters);
+            for (const [scrutinNumber, scrutin] of Object.entries(scrutins)) {
+                addRow(filteredVoters, scrutinNumber, scrutin);
+            }
+        }
+
+        function updateTable(select) {
+            drawTable(voters, select.value);
+        }
+
+        function addHeader (votersList) {
+            var rowHeaderDiv = document.createElement('div');
+            rowHeaderDiv.classList.add('row-header');
+
+            var columnHeaderTitleDiv = document.createElement('div');
+            columnHeaderTitleDiv.classList.add('column');
+            columnHeaderTitleDiv.classList.add('column-title');
+            columnHeaderTitleDiv.innerHTML = 'Scrutins/Votants';
+
+            rowHeaderDiv.appendChild(columnHeaderTitleDiv);
+
+            for (const [key, voter] of Object.entries(votersList)) {
+                var columnElementDiv = document.createElement('div');
+                columnElementDiv.classList.add('column');
+                columnElementDiv.classList.add('column-element');
+
+                columnElementDiv.innerHTML = voter['name'].split(" ").map((n)=>n[0]).join(".");
+                columnElementDiv.title = voter['name'] + ' (' + voter['groupAbreviation'] + ')';
+
+                rowHeaderDiv.appendChild(columnElementDiv);
+            }
+
+            tab.appendChild(rowHeaderDiv);
+        }
+
+        function addRow(votersList, scrutinNumber, scrutin) {
+            var rowScrutinDiv = document.createElement('div');
+            rowScrutinDiv.classList.add('row-scrutin');
+
+            var columnTitleDiv = document.createElement('div');
+            columnTitleDiv.classList.add('column');
+            columnTitleDiv.classList.add('column-title');
+            columnTitleDiv.innerHTML = '<a href="'+scrutin.url+'">n°'+scrutinNumber+' : '+scrutin.titre+'</a>';
+
+            rowScrutinDiv.appendChild(columnTitleDiv);
+
+            for (const [key, voter] of Object.entries(votersList)) {
+                var columnElementDiv = document.createElement('div');
+                columnElementDiv.classList.add('column');
+                columnElementDiv.classList.add('column-element');
+                //columnElementDiv.style.height = rowScrutinDiv.offsetHeight;
+
+                var color = 'white';
+                if (scrutinNumber in voter['votes']) {
+                    color = getVoteColor(voter['votes'][scrutinNumber]);
+                }
+                columnElementDiv.style.backgroundColor = color;
+
+                rowScrutinDiv.appendChild(columnElementDiv);
+            }
+
+            tab.appendChild(rowScrutinDiv);
+        }
+
+
+        function getVoteColor(vote) {
+            switch (vote) {
+                case -1:
+                    return 'red';
+                    break;
+                case 0:
+                    return 'grey';
+                    break;
+                case 1:
+                    return 'green';
+                    break;
+            }
+            return 'white';
+        }
+
+    </script>
+</body>
+</html>
