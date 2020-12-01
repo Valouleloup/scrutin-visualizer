@@ -1,0 +1,2 @@
+# scrutin-visualizer
+Scrutin visualizer
